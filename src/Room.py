@@ -416,10 +416,14 @@ class Room:
 			elif tempStr[0] == "Throw":
 				self.handleThrow(tempStr)
 
+	def update(self):
+		
+
 	def main(self):
 		while 1:
 			self.recvData()
 			self.handleRecv()
+			self.update()
 
 
 
