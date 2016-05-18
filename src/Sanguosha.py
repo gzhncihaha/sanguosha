@@ -11,7 +11,7 @@ if __name__ == "__main__":
 	pygame.init()
 	screen.initialize()
 	inputs.initialize()
-	communicater.initialize("192.168.19.1", 5001)
+	communicater.initialize("192.168.1.107", 5001)
 	Scene = Scene_Title()
 	while Scene != None:
 		Scene = Scene.main()
