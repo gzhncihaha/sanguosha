@@ -1,0 +1,100 @@
+
+			if len(tempStr) > 1:
+				print(tempStr)
+			if tempStr[0] == "PlayerNo":
+				self.player.setNo(tempStr[1])
+				self.createOtherPlayer()
+			#	print("playerNo:"+self.player.No)
+			elif tempStr[0] == "roundstart":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					trans.sendStr("roundstartover,"+tempPlayer)
+					time.sleep(0.5)
+			elif tempStr[0] == "start":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					trans.sendStr("startover,"+tempPlayer)
+					time.sleep(0.5)
+			elif tempStr[0] == "judge":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					trans.sendStr("judgeover,"+tempPlayer)
+					time.sleep(0.5)
+			elif tempStr[0] == "draw":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					trans.sendStr("drawok,"+tempPlayer)
+					time.sleep(0.5)
+			elif tempStr[0] == "drawsend":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					cardNum = int(tempStr[2])
+					for i in range(cardNum):
+						cardIdent = int(tempStr[i+3])
+						self.player.addCard(cardIdent)
+					trans.sendStr("drawover,"+tempPlayer)
+					time.sleep(0.5)
+				else:
+					for op in self.otherPlayer:
+						if op.No == tempPlayer:
+							op.addCard(int(tempStr[2]))
+			elif tempStr[0] == "play":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					self.player.setStatus("play")
+					
+			elif tempStr[0] == "use":
+				tempPlayer = tempStr[1]
+				tempCard = tempStr[2]
+				if tempPlayer == self.player.No:
+					self.player.useCard(int(tempCard))
+				else:
+					for op in self.otherPlayer:
+						if op.No == tempPlayer:
+							op.useCard(int(tempCard))
+							break
+			elif tempStr[0] == "use-s":
+				tempPlayer = tempStr[1]
+				tempCard = tempStr[2]
+				tempSelectPlayer = tempStr[3]
+				if tempSelectPlayer != self.player.No:
+					for op in self.otherPlayer:
+						if op.No == tempSelectPlayer:
+							op.decHP(1)
+							break
+				else:
+					self.player.decHP(1)
+			elif tempStr[0] == "PlayerHero":
+				self.player.setHero(int(tempStr[1]))
+			elif tempStr[0] == "PlayerIdentity":
+				self.player.setIdentity(tempStr[1])
+			elif tempStr[0] == "SelectHero":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					pass
+				else:
+					for op in self.otherPlayer:
+						if op.No == tempPlayer:
+							op.setHero(int(tempStr[2]))
+							break
+			elif tempStr[0] == "SetZg":
+				tempPlayer = tempStr[1]
+				if tempPlayer != self.player.No:
+					for op in self.otherPlayer:
+						if op.No == tempPlayer:
+							op.setIdentity('zg')
+							break
+			elif tempStr[0] == "deccard":
+				tempPlayer = tempStr[1]
+				if tempPlayer != self.player.No:
+					for op in self.otherPlayer:
+						if op.No == tempPlayer:
+							op.addCard(-int(tempStr[2]))
+							break
+			elif tempStr[0] == "discard":
+				tempPlayer = tempStr[1]
+				if tempPlayer == self.player.No:
+					self.player.status = "discard"
+					for hcard in self.player.clst:
+						hcard.select = False
+'''
