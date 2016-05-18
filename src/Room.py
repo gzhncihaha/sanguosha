@@ -6,46 +6,44 @@ from Deck import *
 from BuildCards import *	
 from random import *
 
-inStringList = []
-data = ''
-con = threading.Condition()  
-def np(t):
-	n = int(t)
-	n = n%2+1
-	return str(n)
-
-def ClientThreadIn(conn, username):#开辟线程  
-	global inStringList  
-	while True:
-		try:  
-			temp = conn.recv(1024)  
-			print("server recv:"+str(temp, encoding = "utf8"))
-			inStringList.append(str(temp, encoding = "utf8"))
-		except:  
-			NotifyAll(username + " leaves the room!")  
-			return  
-
-def NotifyAll(sss):#广播  
-	global data  
-	if con.acquire():  
-		
-		data = sss  
-		print("server send:"+data)
-		con.notifyAll()  
-		con.release()  
-
-def ClientThreadOut(conn): 
-	global data  
-	while True:  
-		if con.acquire():  
-			con.wait()  
-			if data:  
-				try:  
-					conn.sendall(bytes(data, encoding="utf-8"))  
-					con.release()  
-				except:  
-					con.release()  
-					return  
+#inStringList = []
+#data = ''
+#con = threading.Condition()  
+#
+#
+#def ClientThreadIn(conn, username):#开辟线程  
+#	global inStringList  
+#	while True:
+#		try:  
+#			temp = conn.recv(1024)  
+#			print("server recv:"+str(temp, encoding = "utf8"))
+#			inStringList.append(str(temp, encoding = "utf8"))
+#		except:  
+#
+#			NotifyAll(username + " leaves the room!")  
+#			return  
+#
+#def NotifyAll(sss):#广播  
+#	global data  
+#	if con.acquire():  
+		#
+#		data = sss  
+#		print("server send:"+data)
+#		con.notifyAll()  
+#		con.release()  
+#
+#def ClientThreadOut(conn): 
+#	global data  
+#	while True:  
+#		if con.acquire():  
+#			con.wait()  
+#			if data:  
+#				try:  
+#					conn.sendall(bytes(data, encoding="utf-8"))  
+#					con.release()  
+#				except:  
+#					con.release()  
+#					return  
 
 class Room:
 	def __init__(self, host, port, capacity):
@@ -66,24 +64,68 @@ class Room:
 		self.trickStack = ["" for i in range(10)]
 		self.trickPointer = 0
 		self.trickList = []
+		self.havePeople = True
+		self.playerNum = 0
+
+		self.inStringList = []
+		self.data = ''
+		self.con = threading.Condition()  
+	
+	
+	def ClientThreadIn(self, conn, username):#开辟线程  
+		#global inStringList  
+		while True:
+			try:  
+				temp = conn.recv(1024)  
+				print("server recv:"+str(temp, encoding = "utf8"))
+				self.inStringList.append(str(temp, encoding = "utf8"))
+			except:  
+				self.playerNum -= 1
+				if self.playerNum == 0:
+					self.havePeople = False
+				self.NotifyAll(username + " leaves the room!")  
+				return  
+	
+	def NotifyAll(self, sss):#广播  
+		#global data  
+		if self.con.acquire():  
+			
+			self.data = sss  
+			print("server send:"+self.data)
+			self.con.notifyAll()  
+			self.con.release()  
+	
+	def ClientThreadOut(self, conn): 
+		#global data  
+		while True:  
+			if self.con.acquire():  
+				self.con.wait()  
+				if self.data:  
+					try:  
+						conn.sendall(bytes(self.data, encoding="utf-8"))  
+						self.con.release()  
+					except:  
+						self.con.release()  
+						return  
 
 	def addPlayer(self, rp):
 		self.players.append(rp)
 		if int(rp.prepareNo) == self.capacity:
 			self.allIn = True
-		threading.Thread(target = ClientThreadIn , args = (rp.conn, rp.username)).start()
-		threading.Thread(target = ClientThreadOut , args = (rp.conn,)).start()  
+		self.playerNum += 1
+		threading.Thread(target = self.ClientThreadIn , args = (rp.conn, rp.username)).start()
+		threading.Thread(target = self.ClientThreadOut , args = (rp.conn,)).start()  
 
 	def full(self):
 		return self.allIn
 
 	def recvData(self):
-		global inStringList
-		self.recvStrList = inStringList
-		inStringList = []
+		#global inStringList
+		self.recvStrList = self.inStringList
+		self.inStringList = []
 
 	def sendData(self, s, pausetime):
-		NotifyAll(s)
+		self.NotifyAll(s)
 		time.sleep(pausetime)
 
 	def nextPlayer(self, s):
@@ -416,16 +458,24 @@ class Room:
 			elif tempStr[0] == "Throw":
 				self.handleThrow(tempStr)
 
-	def update(self):
-		
-
 	def main(self):
+		numPlayer = 0
 		while 1:
+			conn, addr = self.socket.accept() 
+			print ('Connected with ' + addr[0] + ':' + str(addr[1]))
+			numPlayer += 1
+			nick = conn.recv(1024)
+			nick = str(nick, encoding = "utf8")
+			while (nick.split(",")[0] != "UserName"):
+				nick = conn.recv(1024)
+			self.addPlayer(RoomPlayer(conn=conn, username=nick.split(",")[1], No=str(numPlayer)))
+			if self.full():
+				break
+
+		while self.havePeople:
 			self.recvData()
 			self.handleRecv()
-			self.update()
-
-
+			#self.update()
 
 class RoomPlayer:
 	def __init__(self, conn, username, No):

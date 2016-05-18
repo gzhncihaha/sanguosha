@@ -286,9 +286,6 @@ class Scene_Room(Scene_Base):
 				self.player.trickTarget = s[2]
 
 			card = copy.copy(bCards[int(self.player.trickCard) - 1])
-			if self.player.trickSource == '' and self.player.No == self.player.trickTarget:
-				self.sendData("NotUseNullification,"+self.player.No)
-				return
 
 			if self.player.trickSource == '' and self.player.No == self.player.trickTarget and card.subtype == 'single':
 				self.sendData("NotUseNullification,"+self.player.No)
