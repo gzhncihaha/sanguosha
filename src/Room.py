@@ -477,6 +477,8 @@ class Room:
 			self.handleRecv()
 			#self.update()
 
+		self.socket.close()
+
 class RoomPlayer:
 	def __init__(self, conn, username, No):
 		self.conn = conn

@@ -16,10 +16,17 @@ threadList = [None for i in range(100)]
 
 print("ip:"+ipAddr)
 
-for i in range(4):
-	roomList[i] = Room(host = ipAddr, port = 5002 + i, capacity = i + 2)
-	threadList[i] = threading.Thread(target = roomList[i].main , args = ())
-	threadList[i].start()
+def refresh():
+	global roomList, threadList
+	while 1:
+		for i in range(4):
+			if roomList[i] == None or roomList[i].havePeople == False:
+				roomList[i] = Room(host = ipAddr, port = 5002 + i, capacity = i + 2)
+				threadList[i] = threading.Thread(target = roomList[i].main , args = ())
+				threadList[i].start()
+		time.sleep(1)
+
+threading.Thread(target = refresh , args = ()).start()
 
 while 1:
 	conn, addr = mainSocket.accept()
